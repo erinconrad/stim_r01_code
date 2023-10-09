@@ -16,12 +16,15 @@ close all
 
 %% Parameters
 nb = 1e3; % number bootstrap iterations
-
-n_patients = 32; % from will's table
-n_sz_per_pt = 10; % guesstimate
 delta = 1; % minimal effect size to declare significant difference between stim and spontaneous (note this is large!)
 obs_delta = 0; % Assume this is the observed effect size - assume I find no difference between the stim and spontaneous seizures
 alpha = 0.05;
+
+% Load the stim seizure information file
+T = readtable('../data/stim_seizure_information.xlsx');
+
+% get n patients and n szs per patient
+[n_patients,n_sz_per_pt] = get_n_pts_and_szs(T); % 32 and 8, respectively
 
 % re-derive the mean for the stim seizures given delta
 stim_mean = delta; % z = (stim-mean(spon))/std(spon)
@@ -79,12 +82,16 @@ for ib = 1:nb
 
 end
 
+% I think I need to multiply the p-value by 2 to make this a two-sided
+% p-value, because the metric could be higher or lower.
+two_p_all = one_p_all * 2;
+
 % Power is the proportion of studies in which I would find a significant
 % result
-power = (sum(one_p_all<alpha))/nb;
+power = (sum(two_p_all<alpha))/nb;
 
 figure
-plot(sort(one_p_all),'o')
+plot(sort(two_p_all),'o')
 hold on
 plot(xlim,[alpha alpha])
 title(sprintf('Power = %1.2f',power))
